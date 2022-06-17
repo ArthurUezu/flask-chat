@@ -4,30 +4,43 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <link rel="stylesheet" href= "{{ url_for('static',filename='css/index.css') }}">
+    <title>Chat</title>
 </head>
 <body>
     <header>
-        
-        <input id="name" type="text" placeholder="Nome">
-        <button id="name_button">Salvar</button>
+        <div class="container">
+            <div class="input-group">
+                <input id="name" type="text" placeholder="Nome"><input id="color" type="color"><button id="name_button">Salvar</button>
+            </div>
+        </div>
     </header>
     <main>
-        <section id="messages">
-            <span><b>Nome</b>Mensagem</span><br>
+        <section>
+            <div class="container" id="messages">
+                {% for message in messages %}
+                <span><b style="color:{{ message.color }};">{{ message.name }}: </b>{{ message.message }}</span><br>
+                {% endfor %}
+            </div>
         </section>
         <section id="chat">
-            <form id="message-form" action="">
-                <input type="text" placeholder="Mensagem...">
-                <button type="submit">Enviar</button>
-            </form>
+            <div class="container">
+                <form id="message-form" action="">
+                    <div class="input-group">
+                        <input type="text" placeholder="Mensagem..."><button type="submit">Enviar</button>
+                    </div>
+                </form>
+            </div>
         </section>
     </main>
     <script src="https://cdn.socket.io/4.5.0/socket.io.min.js" integrity="sha384-7EyYLQZgWBi67fBtVxw60/OWl1kjsfrPFcaU0pp0nAh+i8FD068QogUvg85Ewy1k" crossorigin="anonymous"></script>
     <script>
         var name = "";
+        var color = "";
         document.getElementById("name_button").addEventListener("click",(event)=>{
             name = document.getElementById("name").value;
+            color = document.getElementById("color").value;
+            document.getElementById("name_button").setAttribute("disabled","true");
         });
         window.onload = () =>{
             const socket = io('http://127.0.0.1:5000');
@@ -37,15 +50,23 @@
 
             document.querySelector("form").addEventListener("submit",(event)=>{
                 event.preventDefault();
-                socket.emit("sendMessage", 
-                {'nome': name,
-                'mensagem': event.target[0].value});
+                if(name.length == 0){
+                    name = "anonymous";
+                }
+                if(event.target[0].value.length>0){
+                    socket.emit("sendMessage", 
+                    {
+                        'nome': name,
+                        'mensagem': event.target[0].value,
+                        'cor':color
+                    });
+                }
                 event.target[0].value = "";
             })
             socket.on("getMessage", (message)=>{
                 console.log(message)
                 const span = document.createElement("span");
-                span.innerHTML = "<b>"+message.nome+"</b>: "+ message.mensagem+"<br>";
+                span.innerHTML = "<b style='color:"+message.cor+";'>"+message.nome+"</b>: "+ message.mensagem+"<br>";
                 document.getElementById("messages").appendChild(span);
             });
         }
