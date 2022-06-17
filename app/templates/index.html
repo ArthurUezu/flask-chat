@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <header>
+        
+        <input id="name" type="text" placeholder="Nome">
+        <button id="name_button">Salvar</button>
+    </header>
+    <main>
+        <section id="messages">
+            <span><b>Nome</b>Mensagem</span><br>
+        </section>
+        <section id="chat">
+            <form id="message-form" action="">
+                <input type="text" placeholder="Mensagem...">
+                <button type="submit">Enviar</button>
+            </form>
+        </section>
+    </main>
+    <script src="https://cdn.socket.io/4.5.0/socket.io.min.js" integrity="sha384-7EyYLQZgWBi67fBtVxw60/OWl1kjsfrPFcaU0pp0nAh+i8FD068QogUvg85Ewy1k" crossorigin="anonymous"></script>
+    <script>
+        var name = "";
+        document.getElementById("name_button").addEventListener("click",(event)=>{
+            name = document.getElementById("name").value;
+        });
+        window.onload = () =>{
+            const socket = io('http://127.0.0.1:5000');
+            socket.on('connect', () => {
+                socket.send('User connected :)');
+            })
+
+            document.querySelector("form").addEventListener("submit",(event)=>{
+                event.preventDefault();
+                socket.emit("sendMessage", 
+                {'nome': name,
+                'mensagem': event.target[0].value});
+                event.target[0].value = "";
+            })
+            socket.on("getMessage", (message)=>{
+                console.log(message)
+                const span = document.createElement("span");
+                span.innerHTML = "<b>"+message.nome+"</b>: "+ message.mensagem+"<br>";
+                document.getElementById("messages").appendChild(span);
+            });
+        }
+
+    </script>
+</body>
+</html>
